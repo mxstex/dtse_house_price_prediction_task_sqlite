@@ -1,0 +1,8 @@
+graph TD
+    A[Input Data: housing.csv] --> B[Preprocessing]
+    B --> C[Cleaned Data]
+    C --> D[Database Storage: cleaned_data table]
+    D --> E[Load Pre-trained Model: model.joblib]
+    E --> F[Prediction Generation]
+    F --> G[Database Storage: predictions table]
+    F --> H[CSV Export: predictions.csv]
