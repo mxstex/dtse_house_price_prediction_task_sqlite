@@ -3,6 +3,7 @@ from sqlite3 import Connection
 from typing import List, Tuple
 from config import logger
 
+
 def create_cleaned_data_table(conn: Connection, features: List[str]) -> None:
     """
     Create a table for storing cleaned housing data.
@@ -15,7 +16,10 @@ def create_cleaned_data_table(conn: Connection, features: List[str]) -> None:
         sqlite3.Error: If table creation fails.
     """
     # Replace invalid characters with underscores
-    sanitized_features = [feature.replace(" ", "_").replace("<", "_LT_").replace(">", "_GT_") for feature in features]
+    sanitized_features = [
+        feature.replace(" ", "_").replace("<", "_LT_").replace(">", "_GT_")
+        for feature in features
+    ]
     feature_columns = ", ".join([f"{feature} REAL" for feature in sanitized_features])
     query = f"""
     CREATE TABLE IF NOT EXISTS cleaned_data (
@@ -31,7 +35,10 @@ def create_cleaned_data_table(conn: Connection, features: List[str]) -> None:
         logger.error(f"Error creating table 'cleaned_data': {e}")
         raise
 
-def insert_cleaned_data(conn: Connection, features: List[str], data: List[Tuple]) -> None:
+
+def insert_cleaned_data(
+    conn: Connection, features: List[str], data: List[Tuple]
+) -> None:
     """
     Insert preprocessed data into the cleaned_data table.
 
@@ -45,16 +52,22 @@ def insert_cleaned_data(conn: Connection, features: List[str], data: List[Tuple]
     """
     try:
         # Sanitize column names
-        sanitized_features = [feature.replace(" ", "_").replace("<", "_LT_").replace(">", "_GT_") for feature in features]
+        sanitized_features = [
+            feature.replace(" ", "_").replace("<", "_LT_").replace(">", "_GT_")
+            for feature in features
+        ]
         columns = ", ".join(sanitized_features + ["target"])
         placeholders = ", ".join(["?"] * (len(features) + 1))  # +1 for the target
         query = f"INSERT INTO cleaned_data ({columns}) VALUES ({placeholders})"
         conn.executemany(query, data)
         conn.commit()
-        logger.info(f"Inserted {len(data)} rows into 'cleaned_data' table successfully.")
+        logger.info(
+            f"Inserted {len(data)} rows into 'cleaned_data' table successfully."
+        )
     except sqlite3.Error as e:
         logger.error(f"Error inserting cleaned data: {e}")
         raise
+
 
 def create_predictions_table(conn: Connection) -> None:
     """
@@ -80,6 +93,7 @@ def create_predictions_table(conn: Connection) -> None:
         logger.error(f"Error creating table 'predictions': {e}")
         raise
 
+
 def insert_predictions(conn: Connection, data: List[Tuple[float, float]]) -> None:
     """
     Insert prediction results into the predictions table.
@@ -98,4 +112,17 @@ def insert_predictions(conn: Connection, data: List[Tuple[float, float]]) -> Non
         logger.info(f"Inserted {len(data)} rows into 'predictions' table successfully.")
     except sqlite3.Error as e:
         logger.error(f"Error inserting predictions: {e}")
+        raise
+
+
+def get_cleaned_data(conn: Connection) -> List[Tuple]:
+    try:
+        with conn.cursor() as cur:
+            query = "SELECT * FROM cleaned_data"
+            cur.execute(query)
+            rows = cur.fetchall()
+            logger.info("Selected rows from 'cleaned_data' table successfully.")
+            return rows
+    except sqlite3.Error as e:
+        logger.error(f"Error getting cleaned data: {e}")
         raise
