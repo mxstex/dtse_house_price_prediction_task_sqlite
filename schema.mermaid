@@ -1,8 +1,15 @@
 graph TD
-    A[Input Data: housing.csv] --> B[Preprocessing]
-    B --> C[Cleaned Data]
-    C --> D[Database Storage: cleaned_data table]
-    D --> E[Load Pre-trained Model: model.joblib]
-    E --> F[Prediction Generation]
-    F --> G[Database Storage: predictions table]
-    F --> H[CSV Export: predictions.csv]
+     A[Start Pipeline] --> B[Preprocess Data]
+     B --> C{Check Data Validity}
+     C -->|Valid| D[Connect to Database]
+     C -->|Invalid| E[Log Error]
+     D --> F[Create Database Tables]
+     F --> G[Insert Features into Database]
+     G --> H[Retrieve Features from Database]
+     H --> I[Load Trained Model]
+     I --> J[Make Predictions]
+     J --> K[Evaluate Model Performance]
+     K --> L[Save Predictions to CSV]
+     L --> M[Save Predictions to Database]
+     M --> N[End Pipeline]
+     E --> N

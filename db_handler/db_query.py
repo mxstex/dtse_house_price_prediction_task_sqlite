@@ -1,4 +1,5 @@
 import sqlite3
+import pandas as pd
 from sqlite3 import Connection
 from typing import List, Tuple
 from config import logger
@@ -115,14 +116,45 @@ def insert_predictions(conn: Connection, data: List[Tuple[float, float]]) -> Non
         raise
 
 
-def get_cleaned_data(conn: Connection) -> List[Tuple]:
+def get_cleaned_data(conn: Connection, table: str) -> pd.DataFrame:
+    """
+    Fetches all rows from a specified SQLite table and returns them as a pandas DataFrame.
+
+    Parameters:
+        conn (sqlite3.Connection): SQLite database connection object.
+        table (str): Name of the table to query.
+
+    Returns:
+        pd.DataFrame: DataFrame containing the query results.
+    """
     try:
-        with conn.cursor() as cur:
-            query = "SELECT * FROM cleaned_data"
-            cur.execute(query)
-            rows = cur.fetchall()
-            logger.info("Selected rows from 'cleaned_data' table successfully.")
-            return rows
+        query = f"SELECT * FROM {table}"
+        df = pd.read_sql_query(query, conn)
+        print(f"Data fetched successfully from the '{table}' table.")
+        return df
     except sqlite3.Error as e:
-        logger.error(f"Error getting cleaned data: {e}")
+        print(f"Error fetching data from '{table}' table: {e}")
         raise
+
+
+def insert_df_to_sqlite(conn: Connection, df: pd.DataFrame, table_name: str):
+    """
+    Inserts a pandas DataFrame into an SQLite table.
+
+    Parameters:
+        conn (sqlite3.Connection): SQLite database connection object.
+        df (pd.DataFrame): DataFrame to insert into the SQLite database.
+        table_name (str): Name of the table to insert the data into.
+
+    Raises:
+        ValueError: If the DataFrame is empty.
+    """
+    if df.empty:
+        raise ValueError("The DataFrame is empty and cannot be inserted into the database.")
+
+    # Infer SQL table schema from the DataFrame and insert data
+    try:
+        df.to_sql(table_name, conn, if_exists='replace', index=False)
+        print(f"Data inserted successfully into the '{table_name}' table.")
+    except Exception as e:
+        print(f"An error occurred while inserting data into the '{table_name}' table: {e}")
